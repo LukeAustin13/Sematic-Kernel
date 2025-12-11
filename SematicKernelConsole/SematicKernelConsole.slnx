@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../SematicKernelWpf/SematicKernelWpf.csproj" Id="31f7e292-a75e-4c2a-a43d-bdef09523eea" />
+  <Project Path="SematicKernelConsole.csproj" />
+</Solution>
