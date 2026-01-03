@@ -14,27 +14,18 @@ namespace SematicKernelWpf.ViewModel
 
         public ViewModelCommand(Action action)
         {
-            {
-                IsEnabled = true;
-                this.Action = action;
-            }
+            IsEnabled = true;
+            Action = action;
         }
 
-        public bool CanExecute(object? parameter)
-        {
-            if (IsEnabled)
-            {
-                return true;
-            }
-            return false;
-        }
+        public bool CanExecute(object? parameter) => IsEnabled;
+
         public void Execute(object? parameter)
         {
-            if (IsEnabled)
-            {
-                Action();
-            }
-
+            if (IsEnabled) Action();
         }
+
+        public void RaiseCanExecuteChanged()
+            => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
 }

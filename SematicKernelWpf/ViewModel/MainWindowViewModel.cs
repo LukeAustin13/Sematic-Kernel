@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.TextToImage;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,13 +11,15 @@ using System.Configuration;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace SematicKernelWpf.ViewModel
 {
     /// <summary>
-    /// WPF App for Semantic Kernel OpenAI Chat Completion
+    /// WPF App for Semantic Kernel OpenAI Chat Completion & Image Generation
+    /// Some errors have been suppressed as they are flagged as experimental features in Semantic Kernel
     /// </summary>
-    public class MainWindowViewModel: INotifyPropertyChanged
+    public class MainWindowViewModel : INotifyPropertyChanged
     {
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -26,9 +29,13 @@ namespace SematicKernelWpf.ViewModel
         //Keneral properties 
         private IConfiguration configuration;
         private string? apiKey;
-        private readonly string model = "gpt-4.1-mini";
+        private readonly string chatModel = "gpt-4.1-mini";
         ChatHistory? history;
         private IChatCompletionService? chatService;
+
+#pragma warning disable SKEXP0001 
+        private ITextToImageService? imageService;
+#pragma warning restore SKEXP0001
 
         //Commands
         public AsyncViewModelCommand SubmitCommand { get; set; }
@@ -36,7 +43,12 @@ namespace SematicKernelWpf.ViewModel
         public ViewModelCommand ReconnectCommand { get; set; }
         public ViewModelCommand ExitCommand { get; set; }
 
-        //properties for binding
+        public AsyncViewModelCommand GenerateImageCommand { get; }
+        public ViewModelCommand CancelImageCommand { get; }
+        public ViewModelCommand SaveImageCommand { get; }
+
+        //Properties
+        #region Chat Completion Properties
         private string _userMessage = "";
         public string UserMessage
         {
@@ -50,19 +62,50 @@ namespace SematicKernelWpf.ViewModel
             get => _wholeChat;
             set { _wholeChat = value; OnPropertyChanged(); }
         }
+        #endregion
+
+        #region Image Generation Properties
+        private string _imagePrompt = "";
+        public string ImagePrompt
+        {
+            get => _imagePrompt;
+            set { _imagePrompt = value; OnPropertyChanged(); }
+        }
+
+        private BitmapImage? _generatedImage;
+        public BitmapImage? GeneratedImage
+        {
+            get => _generatedImage;
+            set { _generatedImage = value; OnPropertyChanged(); }
+        }
+
+        private bool _isGenerating;
+        public bool IsGenerating
+        {
+            get => _isGenerating;
+            set { _isGenerating = value; OnPropertyChanged(); }
+        }
+
+        private CancellationTokenSource? _imgCts;
+        private byte[]? _lastImageBytes;
+        #endregion
 
 
         public MainWindowViewModel()
         {
             //Set up connection to OpenAI
             CreateConnection();
-            validateConnection();
+            ValidateConnection();
 
             //Set up WPF Commands
             SubmitCommand = new AsyncViewModelCommand(SubmitAsync); //this doesnt work? figure out why! (When the button is clicked, nothing actually happens)
-            ClearCommand = new ViewModelCommand(clear);
-            ReconnectCommand = new ViewModelCommand(resetConnection);
+            ClearCommand = new ViewModelCommand(Clear);
+            ReconnectCommand = new ViewModelCommand(ResetConnection);
             ExitCommand = new ViewModelCommand(() => Application.Current.Shutdown());
+
+            GenerateImageCommand = new AsyncViewModelCommand(GenerateImageAsync);
+            CancelImageCommand = new ViewModelCommand(CancelImage) { IsEnabled = false };
+            SaveImageCommand = new ViewModelCommand(SaveImage) { IsEnabled = false };
         }
 
         /// <summary>
@@ -82,26 +125,41 @@ namespace SematicKernelWpf.ViewModel
                 throw new InvalidOperationException("OpenAI key is invalid");
             }
 
-            //Creating Kernel
-            var kernelBuild = Kernel.CreateBuilder()
-                .AddOpenAIChatCompletion(model, apiKey)
-                .Build();
+            ////Creating Kernel - old way, realised when wanting more than one type of service (chat and image generation) can just add both to same kernel
+            //var kernelBuild = Kernel.CreateBuilder()
+            //    .AddOpenAIChatCompletion(chatModel, apiKey)
+            //    .Build();
 
-            chatService = kernelBuild.GetRequiredService<IChatCompletionService>();
+
+#pragma warning disable SKEXP0010
+            var kernel = Kernel.CreateBuilder()
+                .AddOpenAIChatCompletion(modelId: chatModel, apiKey: apiKey)
+                .AddOpenAITextToImage(apiKey: apiKey, modelId: "gpt-image-1")
+                .Build();
+#pragma warning restore SKEXP0010
+
+            chatService = kernel.GetRequiredService<IChatCompletionService>();
             history = new ChatHistory();
             //Adding a system message gives context to the OpenAI client, telling it how to act/think.
             history.AddSystemMessage("You are a chatty assistant that provides detailed answers; Clearly explains themselves; Is a logical thinker.");
+
+
+#pragma warning disable SKEXP0001 
+            imageService = kernel.GetRequiredService<ITextToImageService>();
+#pragma warning restore SKEXP0001 
+
+
         }
 
         public async Task SubmitAsync()
         {
-            
-            if (!validateConnection())
+
+            if (!ValidateConnection())
             {
                 MessageBox.Show("Connection is not valid.\nEither chat history is null or the chat service was unable to establish a connection.");
                 return;
             }
-            
+
             var userInput = UserMessage?.Trim();
             if (string.IsNullOrWhiteSpace(userInput))
             {
@@ -124,22 +182,24 @@ namespace SematicKernelWpf.ViewModel
             {
                 MessageBox.Show(ex.Message);
                 return;
-            }            
+            }
         }
 
-        private void clear()
+        private void Clear()
         {
             history.Clear();
             history.AddSystemMessage("You are a chatty assistant that provides detailed answers; Clearly explains themselves; Is a logical thinker.");
+            UserMessage = string.Empty;
+            WholeChat = string.Empty;
         }
 
-        private void resetConnection()
+        private void ResetConnection()
         {
             CreateConnection();
-            validateConnection();
+            ValidateConnection();
         }
 
-        private bool validateConnection()
+        private bool ValidateConnection() //Needs to validate both chat and image services eventually, also history -- but could be separate methods?
         {
             if (chatService == null)
             {
@@ -154,6 +214,18 @@ namespace SematicKernelWpf.ViewModel
             }
 
             return true;
+        }
+
+        private async Task GenerateImageAsync() //todo - will need a helper class for image conversion
+        {
+
+        }
+
+        private void CancelImage()//todo
+        {
+        }
+        private void SaveImage()//todo
+        {
         }
     }
 }

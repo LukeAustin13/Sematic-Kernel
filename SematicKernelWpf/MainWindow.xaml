@@ -6,64 +6,130 @@
         xmlns:local="clr-namespace:SematicKernelWpf"
         mc:Ignorable="d"
         Title="SemanticKernelWPF"
-        Width="425"
+        Width="475"
         Height="640"
         ResizeMode="CanResize"
         Topmost="True">
 
     <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        
-        <RichTextBox Grid.Row="0"
-                     Margin="0,0,0,10"
-                     BorderBrush="Black"
-                     BorderThickness="1.5"
-                     IsReadOnly="True"
-                     VerticalScrollBarVisibility="Auto">
-            <FlowDocument>
-                <Paragraph>
-                    <Run Text="{Binding WholeChat}"/>
-                </Paragraph>
-            </FlowDocument>
-        </RichTextBox>
+        <TabControl>
+            <TabItem Header="Chat">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-        <TextBox Grid.Row="1"
-                 Height="35"
-                 Margin="0,0,0,10"
-                 TextWrapping="Wrap"
-                 BorderBrush="Black"
-                 BorderThickness="1.5"
-                 Text="{Binding UserMessage, UpdateSourceTrigger=PropertyChanged}" />
+                    <RichTextBox Grid.Row="0"
+                                 Margin="0,0,0,10"
+                                 BorderBrush="Black"
+                                 BorderThickness="1.5"
+                                 IsReadOnly="True"
+                                 VerticalScrollBarVisibility="Auto">
+                        <FlowDocument>
+                            <Paragraph>
+                                <Run Text="{Binding WholeChat}"/>
+                            </Paragraph>
+                        </FlowDocument>
+                    </RichTextBox>
 
-        <StackPanel Grid.Row="2"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center">
-            <Button Content="Send"
-                    Width="80"
-                    Height="30"
-                    Margin="0,0,10,0"
-                    Command="{Binding SubmitCommand}" />
+                    <TextBox Grid.Row="1"
+                             Height="35"
+                             Margin="0,0,0,10"
+                             TextWrapping="Wrap"
+                             BorderBrush="Black"
+                             BorderThickness="1.5"
+                             Text="{Binding UserMessage, UpdateSourceTrigger=PropertyChanged}" />
 
-            <Button Content="Clear Chat"
-                    Width="80"
-                    Height="30"
-                    Command="{Binding ClearCommand}" />
+                    <StackPanel Grid.Row="2"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center">
+                        <Button Content="Send"
+                                Width="80"
+                                Height="30"
+                                Margin="0,0,10,0"
+                                Command="{Binding SubmitCommand}" />
 
-            <Button Content="Reset Connection"
-                    Width="110"
-                    Height="30"
-                    Margin="10,0,0,0"
-                    Command="{Binding ReconnectCommand}" />
+                        <Button Content="Clear Chat"
+                                Width="80"
+                                Height="30"
+                                Command="{Binding ClearCommand}" />
 
-            <Button Content="Exit"
-                    Width="80"
-                    Height="30"
-                    Margin="10,0,0,0"
-                    Command="{Binding ExitCommand}" />
-        </StackPanel>
+                        <Button Content="Reset Connection"
+                                Width="110"
+                                Height="30"
+                                Margin="10,0,0,0"
+                                Command="{Binding ReconnectCommand}" />
+
+                        <Button Content="Exit"
+                                Width="80"
+                                Height="30"
+                                Margin="10,0,0,0"
+                                Command="{Binding ExitCommand}" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            
+            <TabItem Header="Image Generator">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBox Grid.Row="0"
+                             MinHeight="80"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             BorderBrush="Black"
+                             BorderThickness="1.5"
+                             Text="{Binding ImagePrompt, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <StackPanel Grid.Row="1"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Margin="0,10,0,10">
+                        <Button Content="Generate"
+                                Width="90"
+                                Height="30"
+                                Margin="0,0,10,0"
+                                Command="{Binding GenerateImageCommand}" />
+
+                        <Button Content="Cancel"
+                                Width="90"
+                                Height="30"
+                                Margin="0,0,10,0"
+                                Command="{Binding CancelImageCommand}" />
+
+                        <Button Content="Save PNG"
+                                Width="90"
+                                Height="30"
+                                Command="{Binding SaveImageCommand}" />
+                    </StackPanel>
+
+                    <Border Grid.Row="2"
+                            BorderBrush="Black"
+                            BorderThickness="1.5"
+                            CornerRadius="6"
+                            Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Margin="0,0,0,8"
+                                           Text="{Binding IsGenerating, StringFormat=Generating: {0}}"/>
+
+                                <Image Source="{Binding GeneratedImage}"
+                                       Stretch="Uniform"
+                                       SnapsToDevicePixels="True" />
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>
