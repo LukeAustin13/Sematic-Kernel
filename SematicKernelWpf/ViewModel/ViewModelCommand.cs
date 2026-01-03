@@ -4,10 +4,11 @@ using System.Text;
 
 namespace SematicKernelWpf.ViewModel
 {
-    public class ViewModelCommand
+    //Generic command class for ViewModel commands
+    public class ViewModelCommand  :System.Windows.Input.ICommand
     {
 
-        public event EventHandler CanExecuteChanged = (sender, e) => { };
+        public event EventHandler? CanExecuteChanged = (sender, e) => { };
         private readonly Action Action;
         public bool IsEnabled { get; set; }
 
@@ -19,7 +20,7 @@ namespace SematicKernelWpf.ViewModel
             }
         }
 
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
             if (IsEnabled)
             {
@@ -27,7 +28,7 @@ namespace SematicKernelWpf.ViewModel
             }
             return false;
         }
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
             if (IsEnabled)
             {
@@ -35,6 +36,5 @@ namespace SematicKernelWpf.ViewModel
             }
 
         }
-
     }
 }
