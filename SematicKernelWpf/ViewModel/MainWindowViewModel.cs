@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using SematicKernelWpf.Model;
 
 namespace SematicKernelWpf.ViewModel
 {
@@ -136,6 +137,7 @@ namespace SematicKernelWpf.ViewModel
                 .AddOpenAIChatCompletion(modelId: chatModel, apiKey: apiKey)
                 .AddOpenAITextToImage(apiKey: apiKey, modelId: "gpt-image-1")
                 .Build();
+            //To use OpenAITextToImage - need to have the correct modelId and verification
 #pragma warning restore SKEXP0010
 
             chatService = kernel.GetRequiredService<IChatCompletionService>();
@@ -216,16 +218,55 @@ namespace SematicKernelWpf.ViewModel
             return true;
         }
 
-        private async Task GenerateImageAsync() //todo - will need a helper class for image conversion
+        private async Task GenerateImageAsync() //TODO: get verified on OpenAI to use image generation!! Cant progress until then.
         {
+            IsGenerating = true;
+            _imgCts = new CancellationTokenSource();
+
+            try
+            {
+                string imageGenerationResult = await imageService.GenerateImageAsync(
+                    description: ImagePrompt,
+                    width: 1024,
+                    height: 1024,
+                    cancellationToken: _imgCts.Token);
+
+                _lastImageBytes = await ImageDecoder.ImageStringToBytesAsync(imageGenerationResult, _imgCts.Token);
+                GeneratedImage = ImageDecoder.BytesToBitmapImage(_lastImageBytes);
+
+                SaveImageCommand.RaiseCanExecuteChanged();
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred during image generation: {ex.Message}");
+            }
+            finally
+            {
+                IsGenerating = false;
+                CancelImageCommand.RaiseCanExecuteChanged();
+            }
 
         }
 
-        private void CancelImage()//todo
+        private void CancelImage()
         {
+            _imgCts?.Cancel();
         }
-        private void SaveImage()//todo
+        private void SaveImage()
         {
+
+            if (_lastImageBytes == null || _lastImageBytes.Length == 0) return;
+
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "PNG Image (*.png)|*.png",
+                FileName = "generated.png"
+            };
+
+            if (dlg.ShowDialog() == true)
+                System.IO.File.WriteAllBytes(dlg.FileName, _lastImageBytes);
+
         }
     }
 }
