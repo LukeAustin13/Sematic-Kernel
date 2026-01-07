@@ -21,18 +21,21 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <RichTextBox Grid.Row="0"
-                                 Margin="0,0,0,10"
-                                 BorderBrush="Black"
-                                 BorderThickness="1.5"
-                                 IsReadOnly="True"
-                                 VerticalScrollBarVisibility="Auto">
-                        <FlowDocument>
-                            <Paragraph>
-                                <Run Text="{Binding WholeChat}"/>
-                            </Paragraph>
-                        </FlowDocument>
-                    </RichTextBox>
+                    <ScrollViewer Grid.Row="0"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <RichTextBox MinHeight="140"
+                                     AcceptsReturn="True"
+                                     VerticalScrollBarVisibility="Hidden"
+                                     BorderBrush="Black"
+                                     BorderThickness="1.5">
+                            <FlowDocument>
+                                <Paragraph>
+                                    <Run Text="{Binding StudyNotes}"/>
+                                </Paragraph>
+                            </FlowDocument>
+                        </RichTextBox>
+                    </ScrollViewer>
 
                     <TextBox Grid.Row="1"
                              Height="35"
@@ -71,7 +74,7 @@
                 </Grid>
             </TabItem>
 
-            
+
             <TabItem Header="Image Generator">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
@@ -128,6 +131,156 @@
                             </StackPanel>
                         </ScrollViewer>
                     </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Study Helper">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ComboBox Grid.Column="0"
+                      Height="28"
+                      Margin="0,0,10,0"
+                      ItemsSource="{Binding StudyDecks}"
+                      SelectedItem="{Binding SelectedStudyDeck}"
+                      Text="{Binding SelectedStudyDeck, UpdateSourceTrigger=PropertyChanged}"
+                      IsEditable="True"
+                      BorderBrush="Black"
+                      BorderThickness="1.5" />
+
+                        <Button Grid.Column="1"
+                    Content="Refresh"
+                    Width="80"
+                    Height="28"
+                    Margin="0,0,10,0"
+                    Command="{Binding RefreshDecksCommand}" />
+
+                        <Button Grid.Column="2"
+                    Content="Create Deck"
+                    Width="90"
+                    Height="28"
+                    Command="{Binding CreateDeckCommand}"/>
+                    </Grid>
+
+                    <GroupBox Grid.Row="1" Header="Create flashcards from notes" Margin="0,0,0,10">
+                        <Grid Margin="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <RichTextBox x:Name="StudyNotesRichTextBox"
+                             Grid.Row="0"
+                             AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Disabled"
+                             BorderBrush="Black"
+                             BorderThickness="1.5">
+                                <FlowDocument PageWidth="{Binding ElementName=StudyNotesRichTextBox, Path=ActualWidth}">
+                                    <Paragraph>
+                                        <Run Text="{Binding StudyNotes}"/>
+                                    </Paragraph>
+                                </FlowDocument>
+                            </RichTextBox>
+
+                            <StackPanel Grid.Row="1"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            Margin="0,10,0,0">
+                                <Button Content="Generate Cards"
+                            Width="110"
+                            Height="30"
+                            Margin="0,0,10,0"
+                            Click="GenerateCards_Click"
+                            Command="{Binding GenerateFlashcardsCommand}" />
+
+                                <TextBlock VerticalAlignment="Center"
+                               Text="{Binding StudyStatus}" />
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+
+                    <GroupBox Grid.Row="2" Header="Quiz me" Margin="0,0,0,10">
+                        <Grid Margin="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Content="Next Card"
+                            Width="90"
+                            Height="30"
+                            Margin="0,0,10,0"
+                            Command="{Binding NextCardCommand}" />
+
+                                <Button Content="Show Answer"
+                            Width="100"
+                            Height="30"
+                            Command="{Binding ShowAnswerCommand}" />
+                            </StackPanel>
+
+                            <TextBlock Grid.Row="1"
+                           Margin="0,10,0,4"
+                           FontWeight="Bold"
+                           Text="Question:" />
+
+                            <TextBlock Grid.Row="2"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,10"
+                           Text="{Binding CurrentCardFront}" />
+
+                            <Border Grid.Row="3"
+                        BorderBrush="Black"
+                        BorderThickness="1.5"
+                        CornerRadius="6"
+                        Padding="8">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <TextBlock TextWrapping="Wrap"
+                                   Text="{Binding CurrentCardBack}" />
+                                </ScrollViewer>
+                            </Border>
+                        </Grid>
+                    </GroupBox>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button Content="Wrong"
+                    Width="80"
+                    Height="30"
+                    Margin="0,0,10,0"
+                    Command="{Binding RateWrongCommand}" />
+
+                        <Button Content="Hard"
+                    Width="80"
+                    Height="30"
+                    Margin="0,0,10,0"
+                    Command="{Binding RateHardCommand}" />
+
+                        <Button Content="Good"
+                    Width="80"
+                    Height="30"
+                    Margin="0,0,10,0"
+                    Command="{Binding RateGoodCommand}" />
+
+                        <Button Content="Easy"
+                    Width="80"
+                    Height="30"
+                    Command="{Binding RateEasyCommand}" />
+                    </StackPanel>
                 </Grid>
             </TabItem>
         </TabControl>

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using SematicKernelWpf.ViewModel;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -20,7 +21,18 @@ namespace SematicKernelWpf
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new ViewModel.MainWindowViewModel();
+            DataContext = new MainWindowViewModel();
+        }
+
+        private void GenerateCards_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.StudyNotes = new TextRange(
+                    StudyNotesRichTextBox.Document.ContentStart,
+                    StudyNotesRichTextBox.Document.ContentEnd
+                ).Text;
+            }
         }
     }
 }
